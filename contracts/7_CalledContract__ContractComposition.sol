@@ -2,7 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
- * @title CustomModifierPracticeContract
+ * @title ContractCompositionPracticeContract
  * @author [Your Name]
  * @notice Demonstrates the use of a custom modifier for restricting access to contract administrators.
  * @dev Provides a reusable modifier for access control that can be inherited by other contracts.
