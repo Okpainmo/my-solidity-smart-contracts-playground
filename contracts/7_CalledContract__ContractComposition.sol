@@ -2,23 +2,50 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
+ * @title CustomModifierPracticeContract
+ * @author [Your Name]
+ * @notice Demonstrates the use of a custom modifier for restricting access to contract administrators.
+ * @dev Provides a reusable modifier for access control that can be inherited by other contracts.
+ */
+contract RestrictedToContractAdmins {
+    /// @notice The address of the admin (contract owner)
+    address internal contractOwnerAddress;
+    mapping(address => bool) internal isAdmin; 
+
+    /**
+     * @notice Restricts function access to the contract owner
+     * @dev Reverts if `msg.sender` is not the admin
+     */
+    modifier onlyAdmins() {
+        require(
+            isAdmin[msg.sender],
+            "Unauthorized: you attempted an admin-only task"
+        );
+        _;
+    }
+}
+
+/**
  * @title CalledContract__ContractComposition
  * @author [Your Name]
- * @notice Inherits admin-only access control and provides state tracking for contract metadata
- * @dev Demonstrates inheritance, contract composition, and encapsulated state without external modifiers
+ * @notice Extends admin-only control and manages contract metadata and a sales counter.
+ * @dev Demonstrates smart contract inheritance, state tracking, and admin role management.
  */
-contract CalledContract__ContractComposition {
-    /// @notice The address of the admin (contract owner)
-    address private adminAddress;
-
-    /// @notice The total number of sales recorded
+contract CalledContract__ContractComposition is RestrictedToContractAdmins {
+    /// @notice Tracks the total number of sales
     uint256 private totalSales;
 
-    /// @notice Timestamp of when the contract was deployed
+    /// @notice Timestamp representing when the contract was deployed
     uint256 private creationTime;
 
-    /// @notice Human-readable name for the contract
+    /// @notice Descriptive name assigned to this contract instance
     string private contractName;
+
+    /// @notice Dynamic list of administrator addresses
+    address[] private adminAddressesArray;
+
+    /// @notice Mapping used to verify whether an address has admin privileges
+    // mapping(address => bool) private isAdmin;
 
     /**
      * @notice Initializes the contract with a name and sets the deployer as admin
@@ -28,51 +55,73 @@ contract CalledContract__ContractComposition {
     constructor(string memory _name) {
         creationTime = block.timestamp;
         contractName = _name;
-        adminAddress = msg.sender;
+        contractOwnerAddress = msg.sender;
+
+        adminAddressesArray.push(msg.sender);
+        isAdmin[msg.sender] = true;
     }
 
     /**
-     * @notice Sets the total number of sales
-     * @dev In a production setup, should include access control to restrict this to authorized users
-     * @param newSalesCount The new sales count value to assign to `totalSales`
+     * @notice Updates the total sales count
+     * @dev Only callable by admins; in production, consider external verification of sales data
+     * @param newSalesCount The updated value to store as total sales
      */
-    function setSalesCount(uint256 newSalesCount) public {
+    function setSalesCount(uint256 newSalesCount) public onlyAdmins {
         totalSales = newSalesCount;
     }
 
     /**
-     * @notice Returns the deployment timestamp of the contract
-     * @dev Helpful for audit trails or activity timelines
-     * @return UNIX timestamp of when the contract was deployed
+     * @notice Returns the timestamp when the contract was deployed
+     * @dev Useful for time-based operations or logging
+     * @return The UNIX timestamp of contract deployment
      */
     function getContractCreationTime() public view returns (uint256) {
         return creationTime;
     }
 
     /**
-     * @notice Returns the name assigned to this contract
-     * @dev Provides user-friendly metadata for contract identification
-     * @return The human-readable name of the contract
+     * @notice Retrieves the human-readable name of this contract
+     * @dev Enables identification of specific contract instances
+     * @return The string name of the contract
      */
     function getContractCreationName() public view returns (string memory) {
         return contractName;
     }
 
     /**
-     * @notice Returns the total recorded sales
-     * @dev Public view accessor for internal `totalSales` tracking
-     * @return The value of total sales
+     * @notice Fetches the total number of sales recorded by the contract
+     * @dev Public accessor for internal state variable `totalSales`
+     * @return The current sales total
      */
     function getTotalSales() public view returns (uint256) {
         return totalSales;
     }
 
     /**
-     * @notice Returns the address of the contract's admin
-     * @dev Useful for transparency, delegation, or admin-specific logic
-     * @return The Ethereum address of the contract owner
+     * @notice Adds a new address to the list of administrators
+     * @dev Only callable by existing admins; grants the new address admin rights
+     * @param _addressToAdd The address to be added as an admin
      */
-    function getAdminAddress() public view returns (address) {
-        return adminAddress;
+    function addAdmin(address _addressToAdd) public onlyAdmins {
+        adminAddressesArray.push(_addressToAdd);
+        isAdmin[_addressToAdd] = true;
+    }
+
+    /**
+     * @notice Lists all addresses that are designated as administrators
+     * @dev Only callable by existing admins to protect sensitive information
+     * @return An array of Ethereum addresses with admin privileges
+     */
+    function getAdminAddresses() public view onlyAdmins returns (address[] memory) {
+        return adminAddressesArray;
+    }
+
+    /**
+     * @notice Confirms if the caller is currently an authorized admin
+     * @dev Used to validate admin rights programmatically
+     * @return A boolean indicating if the caller has admin access
+     */
+    function verifyAdminAccess(address _adminAddress) public view onlyAdmins returns (bool) {
+        return isAdmin[ _adminAddress];
     }
 }
