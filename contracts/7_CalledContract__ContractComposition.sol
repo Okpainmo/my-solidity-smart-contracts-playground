@@ -124,4 +124,8 @@ contract CalledContract__ContractComposition is RestrictedToContractAdmins {
     function verifyAdminAccess(address _adminAddress) public view onlyAdmins returns (bool) {
         return isAdmin[ _adminAddress];
     }
+
+    function getContractAddress() public view returns (address) {
+        return address(this);
+    }
 }
