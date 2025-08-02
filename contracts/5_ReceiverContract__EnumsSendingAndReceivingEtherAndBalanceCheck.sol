@@ -80,6 +80,22 @@ contract ReceiverContract__SendingAndReceivingEtherWithBalanceCheck {
         emit PaymentDetails(ActionType.ReceivedEther, msg.sender, msg.value, block.timestamp);
     }
 
+     /// @notice Accepts and logs incoming Ether payments - in case data is sent along with Ether
+    /// @dev Updates the contract details and emits PaymentDetails event
+    fallback() external payable {
+        emit Log("contract received a new payment");
+
+        contractDetails = ContractDetails({
+            contractName: contractName,
+            lastActionTime: block.timestamp,
+            lastAction: ActionType.ReceivedEther,
+            deployedBy: owner,
+            contractBalance: address(this).balance
+        });
+
+        emit PaymentDetails(ActionType.ReceivedEther, msg.sender, msg.value, block.timestamp);
+    }
+
     /// @notice Allows the owner to fund the contract manually
     /// @dev Updates the internal contract state and logs a funding event
     function handleContractFunding() external payable onlyOwner {
