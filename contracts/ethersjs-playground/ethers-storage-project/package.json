@@ -8,7 +8,9 @@
   "scripts": {
     "compile": "solcjs --bin --abi --include-path node_modules/ --base-path . -o ./contracts/compilation-details ./contracts/Storage.sol",
     "build": "npx tsc",
-    "deploy": "npx tsc && node ./dist/deploy.js"
+    "deploy": "npx tsc && node ./dist/deploy.js",
+    "interact": "npx tsc && node ./dist/contract-interactions.js",
+    "encryptKey": "npx tsc && node ./dist/encryptKey.js"
   },
   "devDependencies": {
     "@typechain/ethers-v6": "^0.5.1",

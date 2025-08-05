@@ -18,12 +18,14 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 function contractInteractions() {
     return __awaiter(this, void 0, void 0, function* () {
-        const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:7545';
+        const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:7545";
         const PRIVATE_KEY = process.env.PRIVATE_KEY;
         let provider = new ethers_1.ethers.JsonRpcProvider(RPC_URL);
-        console.log('block number', yield provider.getBlockNumber());
-        let signer = new ethers_1.ethers.Wallet(PRIVATE_KEY, provider);
-        const abi = JSON.parse(fs_1.default.readFileSync('./contracts/compilation-details/_contracts_Storage_sol_SimpleStoragePracticeContract.abi', 'utf8'));
+        console.log("block number", yield provider.getBlockNumber());
+        // let signer = new ethers.Wallet(PRIVATE_KEY as string, provider);
+        const encryptedJson = fs_1.default.readFileSync("./.encryptedKey.json", "utf8");
+        let signer = ethers_1.ethers.Wallet.fromEncryptedJsonSync(encryptedJson, process.env.PRIVATE_KEY_PASSWORD).connect(provider);
+        const abi = JSON.parse(fs_1.default.readFileSync("./contracts/compilation-details/_contracts_Storage_sol_SimpleStoragePracticeContract.abi", "utf8"));
         // console.log('contract abi', abi);
         // const binary = fs
         //   .readFileSync(
@@ -31,12 +33,14 @@ function contractInteractions() {
         //     'utf8'
         //   )
         //   .trim();
-        const contractInstance = new ethers_1.ethers.Contract('0xA8c3047A5D661aB516C3266228ACAf2ADC365A99', abi, provider);
+        const contractInstance = new ethers_1.ethers.Contract("0x163b46dc1f27AAeD8Ba6C87Bfb31595c1493f9DE", abi, provider);
+        /* the below contract interactions might work differently on a testnet as it would on a mainnet - if called together like was done below.
+          Call the contracts separately instead - in different functions/processes*/
         const currentNumber = yield (contractInstance === null || contractInstance === void 0 ? void 0 : contractInstance.handleRetrieve());
         console.log(`currentNumber Number: ${currentNumber}`);
         // @ts-ignore
-        yield (contractInstance === null || contractInstance === void 0 ? void 0 : contractInstance.connect(signer).handleStore(27));
-        console.log('Updating number...');
+        yield (contractInstance === null || contractInstance === void 0 ? void 0 : contractInstance.connect(signer).handleStore(90));
+        console.log("Updating number...");
         // @ts-ignore
         const newNumber = yield (contractInstance === null || contractInstance === void 0 ? void 0 : contractInstance.handleRetrieve());
         console.log(`New Number: ${newNumber}`);
