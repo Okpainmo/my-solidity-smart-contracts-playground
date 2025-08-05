@@ -2,42 +2,37 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract ProperCustomErrorHandlingImmutableAndConstant {
-    /// @notice The address of the admin (contract owner)
+    /// @notice The address of the admin (contract owner), immutable for gas efficiency
     address private immutable i_adminAddress;
 
-    uint256 private constant MINIMUM_PLATFORM_BALANCE = 1000000000000000000; // not used anywhere, just practicing the use of the constant keyword
+    /// @notice A constant representing the minimum platform balance (1 ether) - currently unused
+    uint256 private constant MINIMUM_PLATFORM_BALANCE = 1000000000000000000;
 
     /// @notice The total number of sales recorded
     uint256 private totalSales;
 
-    /// @notice Timestamp of when the contract was deployed
+    /// @notice Timestamp when the contract was deployed
     uint256 private creationTime;
 
     /// @notice Human-readable name for the contract
     string private contractName;
 
+    /// @notice Custom error for unauthorized access by non-admins
     error UserIsNotAdmin();
 
     /**
-     * @notice Restricts access to only the admin/owner of the contract
-     * @dev Reverts if `msg.sender` is not the admin
+     * @notice Modifier that restricts access to only the admin/owner of the contract
+     * @dev Reverts with custom error `UserIsNotAdmin` if caller is not admin
      */
     modifier onlyOwner() {
-        // require(
-        //     msg.sender == adminAddress,
-        //     "unauthorized: you attempted an admin-only task"
-        // );
-
         if (msg.sender != i_adminAddress) {
-            // revert("you attempted an admin-only task");
-            revert UserIsNotAdmin(); // this is more gas efficient as a string is not saved on the blockchain
+            revert UserIsNotAdmin();
         }
-
         _;
     }
 
     /**
-     * @notice Initializes the contract with a name and sets the deployer as admin
+     * @notice Contract constructor that sets the contract name and deployer as admin
      * @param _name The name to assign to the contract
      */
     constructor(string memory _name) {
@@ -48,16 +43,16 @@ contract ProperCustomErrorHandlingImmutableAndConstant {
 
     /**
      * @notice Updates the total sales count
-     * @dev Only callable by the admin
-     * @param newSalesCount The new value to assign to totalSales
+     * @dev Callable only by the admin
+     * @param newSalesCount The new total sales count value
      */
     function updateSalesCount(uint256 newSalesCount) public onlyOwner {
         totalSales = newSalesCount;
     }
 
     /**
-     * @notice Returns the admin address
-     * @dev For transparency and external admin verification
+     * @notice Retrieves the admin address
+     * @dev Provides external visibility of the admin address for verification
      * @return The Ethereum address of the contract admin
      */
     function getAdminAddress() public view returns (address) {

@@ -2,19 +2,20 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
- * @title ContractCompositionPracticeContract
- * @author [Your Name]
- * @notice Demonstrates the use of a custom modifier for restricting access to contract administrators.
- * @dev Provides a reusable modifier for access control that can be inherited by other contracts.
+ * @title RestrictedToContractAdmins
+ * @notice Provides reusable admin-only access control for derived contracts.
+ * @dev Contains an `onlyAdmins` modifier and internal admin tracking.
  */
 contract RestrictedToContractAdmins {
-    /// @notice The address of the admin (contract owner)
+    /// @notice The Ethereum address of the original contract owner
     address internal contractOwnerAddress;
+
+    /// @notice Tracks which addresses have admin privileges
     mapping(address => bool) internal isAdmin; 
 
     /**
-     * @notice Restricts function access to the contract owner
-     * @dev Reverts if `msg.sender` is not the admin
+     * @notice Restricts execution to authorized admins
+     * @dev Reverts if `msg.sender` is not in the `isAdmin` mapping
      */
     modifier onlyAdmins() {
         require(
@@ -27,30 +28,25 @@ contract RestrictedToContractAdmins {
 
 /**
  * @title CalledContract__ContractComposition
- * @author [Your Name]
- * @notice Extends admin-only control and manages contract metadata and a sales counter.
- * @dev Demonstrates smart contract inheritance, state tracking, and admin role management.
+ * @notice Extends `RestrictedToContractAdmins` with sales tracking, contract metadata, and admin management.
+ * @dev Demonstrates contract composition, inheritance, and multi-admin role management.
  */
 contract CalledContract__ContractComposition is RestrictedToContractAdmins {
     /// @notice Tracks the total number of sales
     uint256 private totalSales;
 
-    /// @notice Timestamp representing when the contract was deployed
+    /// @notice UNIX timestamp when the contract was deployed
     uint256 private creationTime;
 
-    /// @notice Descriptive name assigned to this contract instance
+    /// @notice Human-readable name for the contract
     string private contractName;
 
-    /// @notice Dynamic list of administrator addresses
+    /// @notice List of all administrator addresses
     address[] private adminAddressesArray;
 
-    /// @notice Mapping used to verify whether an address has admin privileges
-    // mapping(address => bool) private isAdmin;
-
     /**
-     * @notice Initializes the contract with a name and sets the deployer as admin
-     * @dev Captures `block.timestamp` as deployment time and sets the `msg.sender` as admin
-     * @param _name The name to assign to the contract
+     * @notice Deploys the contract and assigns the deployer as the first admin
+     * @param _name The initial name to assign to the contract
      */
     constructor(string memory _name) {
         creationTime = block.timestamp;
@@ -62,45 +58,42 @@ contract CalledContract__ContractComposition is RestrictedToContractAdmins {
     }
 
     /**
-     * @notice Updates the total sales count
-     * @dev Only callable by admins; in production, consider external verification of sales data
-     * @param newSalesCount The updated value to store as total sales
+     * @notice Updates the total number of sales
+     * @dev Only callable by admins
+     * @param newSalesCount The new sales total to set
      */
     function setSalesCount(uint256 newSalesCount) public onlyAdmins {
         totalSales = newSalesCount;
     }
 
     /**
-     * @notice Returns the timestamp when the contract was deployed
-     * @dev Useful for time-based operations or logging
-     * @return The UNIX timestamp of contract deployment
+     * @notice Retrieves the timestamp when the contract was deployed
+     * @return timestamp The UNIX timestamp of deployment
      */
-    function getContractCreationTime() public view returns (uint256) {
+    function getContractCreationTime() public view returns (uint256 timestamp) {
         return creationTime;
     }
 
     /**
-     * @notice Retrieves the human-readable name of this contract
-     * @dev Enables identification of specific contract instances
-     * @return The string name of the contract
+     * @notice Retrieves the human-readable name assigned to the contract
+     * @return name The contract name
      */
-    function getContractCreationName() public view returns (string memory) {
+    function getContractCreationName() public view returns (string memory name) {
         return contractName;
     }
 
     /**
-     * @notice Fetches the total number of sales recorded by the contract
-     * @dev Public accessor for internal state variable `totalSales`
-     * @return The current sales total
+     * @notice Retrieves the total number of recorded sales
+     * @return count The current sales total
      */
-    function getTotalSales() public view returns (uint256) {
+    function getTotalSales() public view returns (uint256 count) {
         return totalSales;
     }
 
     /**
-     * @notice Adds a new address to the list of administrators
-     * @dev Only callable by existing admins; grants the new address admin rights
-     * @param _addressToAdd The address to be added as an admin
+     * @notice Grants admin privileges to a new address
+     * @dev Only callable by existing admins
+     * @param _addressToAdd The address to grant admin rights
      */
     function addAdmin(address _addressToAdd) public onlyAdmins {
         adminAddressesArray.push(_addressToAdd);
@@ -108,24 +101,27 @@ contract CalledContract__ContractComposition is RestrictedToContractAdmins {
     }
 
     /**
-     * @notice Lists all addresses that are designated as administrators
-     * @dev Only callable by existing admins to protect sensitive information
-     * @return An array of Ethereum addresses with admin privileges
+     * @notice Returns the list of all admin addresses
+     * @return admins Array of addresses with admin privileges
      */
-    function getAdminAddresses() public view onlyAdmins returns (address[] memory) {
+    function getAdminAddresses() public view onlyAdmins returns (address[] memory admins) {
         return adminAddressesArray;
     }
 
     /**
-     * @notice Confirms if the caller is currently an authorized admin
-     * @dev Used to validate admin rights programmatically
-     * @return A boolean indicating if the caller has admin access
+     * @notice Checks if a specific address is an authorized admin
+     * @param _adminAddress The address to check
+     * @return hasAccess True if the address has admin rights, false otherwise
      */
-    function verifyAdminAccess(address _adminAddress) public view onlyAdmins returns (bool) {
-        return isAdmin[ _adminAddress];
+    function verifyAdminAccess(address _adminAddress) public view onlyAdmins returns (bool hasAccess) {
+        return isAdmin[_adminAddress];
     }
 
-    function getContractAddress() public view returns (address) {
+    /**
+     * @notice Retrieves the deployed contract's address
+     * @return contractAddr The address of this contract on-chain
+     */
+    function getContractAddress() public view returns (address contractAddr) {
         return address(this);
     }
 }

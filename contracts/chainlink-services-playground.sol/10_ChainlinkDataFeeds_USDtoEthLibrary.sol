@@ -2,18 +2,17 @@
 pragma solidity >=0.8.2 <0.9.0;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
-// interface AggregatorV3Interface {
-//     function latestRoundData() external view
-//     returns (
-//         uint80 roundId,
-//         int256 answer,
-//         uint256 startedAt,
-//         uint256 updatedAt,
-//         uint80 answeredInRound
-//     );
-// }
-
+/**
+ * @title USDEthConverter
+ * @notice Provides utility functions to convert between USD and ETH amounts using Chainlink price feeds.
+ * @dev Uses the Chainlink AggregatorV3Interface to fetch the latest ETH/USD price.
+ */
 library USDEthConverter {
+    /**
+     * @notice Retrieves the latest ETH price in USD with 18 decimals precision.
+     * @dev Queries Chainlink price feed contract at a known address.
+     * @return The current ETH price in USD scaled to 18 decimals.
+     */
     function getEthPrice() public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(
             0x694AA1769357215DE4FAC081bf1f309aDC325306
@@ -23,35 +22,35 @@ library USDEthConverter {
         return uint256(price * 1e10);
     }
 
-    /* USD amount input parameter must always be sent in the standard 18 decimal position format */
+    /**
+     * @notice Converts a USD amount (18 decimals) to the equivalent ETH amount (18 decimals).
+     * @dev Input USD amount must be scaled with 18 decimals (e.g. $3466.67 as 3466670000000000000000).
+     * @param _usdAmount The USD amount in 18 decimal format.
+     * @return standardUnitAmount The equivalent ETH amount in 18 decimal format.
+     * @return readAbleAmount The equivalent ETH amount as a human-readable integer (without decimals).
+     */
     function usdToEth(
         uint256 _usdAmount
-    ) public view returns (uint256, uint256) {
-        // uint256 ethPrice = 3502776878180000000000; // subject to change - for local remix testing
+    ) public view returns (uint256 standardUnitAmount, uint256 readAbleAmount) {
         uint256 ethPrice = getEthPrice();
 
-        /* using the commented code below, requires an input in normal(readable) integer format
-        e.g. 3500. But the response value would likely not be an accurate whole. Hence it is 
-        recommended to send an input that always has 18 decimal positions as required in solidity.
-        e.g. for 3466.67 - you strip all decimals and/or commas, and input - 3466670000000000000000 - add 16 zeros */
-        // uint256 standardUnitAmount =  (_usdAmount * 1e18 * 1e18) / ethPrice;
-
-        uint256 standardUnitAmount = (_usdAmount * 1e18) / ethPrice;
-        uint256 readAbleAmount = standardUnitAmount / 1e18;
-
-        return (standardUnitAmount, readAbleAmount);
+        standardUnitAmount = (_usdAmount * 1e18) / ethPrice;
+        readAbleAmount = standardUnitAmount / 1e18;
     }
 
-    /* eth input parameter must always be sent in the standard 18 decimal position format */
+    /**
+     * @notice Converts an ETH amount (18 decimals) to the equivalent USD amount (18 decimals).
+     * @dev Input ETH amount must be scaled with 18 decimals.
+     * @param _ethAmount The ETH amount in 18 decimal format.
+     * @return standardUnitPrice The equivalent USD amount in 18 decimal format.
+     * @return readablePrice The equivalent USD amount as a human-readable integer (without decimals).
+     */
     function ethToUSD(
         uint256 _ethAmount
-    ) public view returns (uint256, uint256) {
-        // uint256 ethPrice = 3502776878180000000000; // subject to change - for local remix testing
+    ) public view returns (uint256 standardUnitPrice, uint256 readablePrice) {
         uint256 ethPrice = getEthPrice();
 
-        uint256 standardUnitPrice = (_ethAmount * ethPrice) / 1e18;
-        uint256 readablePrice = standardUnitPrice / 1e18;
-
-        return (standardUnitPrice, readablePrice);
+        standardUnitPrice = (_ethAmount * ethPrice) / 1e18;
+        readablePrice = standardUnitPrice / 1e18;
     }
 }
